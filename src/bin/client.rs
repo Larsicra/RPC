@@ -1,3 +1,5 @@
+#![allow(warnings, unused)]
+
 use lazy_static::lazy_static;
 use pilota::FastStr;
 use std::net::SocketAddr;

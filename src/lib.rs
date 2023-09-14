@@ -1,5 +1,6 @@
 #![feature(impl_trait_in_assoc_type)]
 
+#![allow(warnings, unused)]
 
 use std::collections::HashMap;
 use tokio::sync::Mutex;
@@ -233,9 +234,9 @@ where
         }
 
 
-        // let now = std::time::Instant::now();
+        let now = std::time::Instant::now();
         let resp = self.0.call(cx, req).await;
-        // tracing::info!("Request took {}ms", now.elapsed().as_millis());
+        tracing::info!("Request took {}ms", now.elapsed().as_millis());
         resp
     }
 }
@@ -270,11 +271,13 @@ impl Proxy {
             let st = line?;
             let line_str: Vec<String> = st.split(" ").map(String::from).collect();
             
-            if line_str[0] == "master" {
+            if line_str[0] == "proxy" {
+
+            } else if line_str[2] == "master" {
+                println!("pro master: {}", line_str[2].clone());
                 master = line_str[1].clone();
-            } else if line_str[0] == "proxy" {
-                // self_port = line_str[1].clone();
-            } else if  line_str[0] == "slave" {
+            } else if  line_str[2] == "slaveof" {
+                println!("pro slave: {}", line_str[2].clone());
                 conn.push(line_str[1].clone());
             }
         }
@@ -293,6 +296,7 @@ async fn to_set(target: String, _req: volo_gen::volo::example::GetItemRequest)
 -> ::core::result::Result<volo_gen::volo::example::GetItemResponse, ::volo_thrift::AnyhowError> {
     let n_client: volo_gen::volo::example::ItemServiceClient = {
         let addr: SocketAddr = target.parse().unwrap();
+        println!("{:?}", addr.clone());
         volo_gen::volo::example::ItemServiceClientBuilder::new("volo-example")
             .layer_outer(LogLayer)
             .address(addr)
@@ -324,10 +328,12 @@ impl volo_gen::volo::example::ItemService for Proxy {
     {
 
         if _req.ops == "set".to_string() {
+            println!("to set");
             let handle = tokio::spawn(to_set(self.master.clone(), _req));
             let res = handle.await.unwrap();
             return res;
         } else {
+            println!("to get");
             let target = self.connx.lock().await;
 
             let h1 = to_slave(target[0].clone(), _req.clone()).fuse();

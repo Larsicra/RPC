@@ -8,3 +8,16 @@ set a 1
 set a fin
 set a fin
 set a null
+set a b
+set a 1
+set b 2
+set c 3
+set a 4
+set a 4
+set a 4
+set a 4
+set x 1
+set y 1
+set y f
+set y f
+set y f

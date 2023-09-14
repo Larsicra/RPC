@@ -1,5 +1,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
+#![allow(warnings, unused)]
+
 use std::net::SocketAddr;
 
 use volo_example::{S, Proxy};
