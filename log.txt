@@ -1,0 +1,10 @@
+set a 1
+set b 2
+set c fin
+set a 2
+set far fal
+set a 1
+set a 1
+set a fin
+set a fin
+set a null
