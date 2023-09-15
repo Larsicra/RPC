@@ -1,0 +1,40 @@
+git remote add origin git@github.com:Larsicra/RPC.git
+git branch -M main
+git push -u origin main
+
+rustup run nightly cargo run --bin server
+
+
+
+tokio::spawn client(s)
+ctrl + c
+
+rustup run nightly cargo run --bin server 127.0.0.1:8080 master 127.0.0.1:8080
+
+cargo run --bin server 127.0.0.1:8080 master 127.0.0.1:8080
+cargo run --bin server 127.0.0.1:8082 slaveof 127.0.0.1:8080
+cargo run --bin server 127.0.0.1:8083 slaveof 127.0.0.1:8080
+cargo run --bin server 127.0.0.1:8084 slaveof 127.0.0.1:8080
+
+cargo run --bin client 127.0.0.1:8080
+cargo run --bin client 127.0.0.1:8082
+cargo run --bin client 127.0.0.1:8083
+cargo run --bin client 127.0.0.1:8084
+
+cargo run --bin proxy
+cargo run --bin client 127.0.0.1:8081
+
+cargo run --bin client 127.0.0.1:8080
+cargo run --bin client 127.0.0.1:8082
+
+
+cargo run --bin cli 127.0.0.1:8080 get a
+cargo run --bin cli 127.0.0.1:8080 set a b
+cargo run --bin cli 127.0.0.1:8080 del a
+cargo run --bin cli 127.0.0.1:8080 ping a
+cargo run --bin cli 127.0.0.1:8084 ping
+
+
+cargo run --bin cli 127.0.0.1:8080 get a
+cargo run --bin cli 127.0.0.1:8082 get b
+cargo run --bin cli 127.0.0.1:8081 get c

@@ -117,8 +117,6 @@ impl volo_gen::volo::example::ItemService for S {
 	async fn get_item(&self, _req: volo_gen::volo::example::GetItemRequest)
      -> ::core::result::Result<volo_gen::volo::example::GetItemResponse, ::volo_thrift::AnyhowError> 
     {
-        thread::sleep(Duration::from_secs(5));
-
         let mut res = volo_gen::volo::example::GetItemResponse {
             value: FastStr::from(""),
             stat: false,
@@ -158,6 +156,7 @@ impl volo_gen::volo::example::ItemService for S {
                 println!("send finished");
             }
         } else if _req.ops == "get".to_string() {
+            thread::sleep(Duration::from_secs(5));
             let k = _req.key.to_string();
             match self.data.lock().await.get(&k) {
                 Some(get_res) => {
@@ -254,14 +253,14 @@ impl<S> volo::Layer<S> for LogLayer {
 /////////////////////////////////////////////////////////////////////////////
 
 pub struct Proxy {
-    master: String,
+    master: Mutex<Vec<String>>,
     connx: Mutex<Vec<String>>,
 }
 
 impl Proxy {
     pub async fn new() -> Result<Self, Error> {
         let mut conn: Vec<String> = Vec::new();
-        let mut master = String::new();
+        let mut master: Vec<String> = Vec::new();
         // let mut self_port = String::new();
 
         let path = "setting.txt";                                           // read from settings                              
@@ -275,7 +274,7 @@ impl Proxy {
 
             } else if line_str[2] == "master" {
                 println!("pro master: {}", line_str[2].clone());
-                master = line_str[1].clone();
+                master.push(line_str[1].clone());
             } else if  line_str[2] == "slaveof" {
                 println!("pro slave: {}", line_str[2].clone());
                 conn.push(line_str[1].clone());
@@ -283,7 +282,7 @@ impl Proxy {
         }
 
         let n = Proxy {
-            master: master,
+            master: Mutex::new(master),
             connx: Mutex::new(conn),
         };
         Ok(n)
@@ -329,9 +328,18 @@ impl volo_gen::volo::example::ItemService for Proxy {
 
         if _req.ops == "set".to_string() {
             println!("to set");
-            let handle = tokio::spawn(to_set(self.master.clone(), _req));
-            let res = handle.await.unwrap();
-            return res;
+            let m = self.master.lock().await;
+            let mut handles = Vec::new();
+            for mas in m.iter() {
+                let h = to_set(mas.clone(), _req.clone());
+                handles.push(h);
+            }
+            futures::future::join_all(handles).await;
+            let mut res = volo_gen::volo::example::GetItemResponse {
+                value: FastStr::from(""),
+                stat: false,
+            };
+            return Ok(res);
         } else {
             println!("to get");
             let target = self.connx.lock().await;
